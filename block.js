@@ -13,7 +13,17 @@ class Block
      {
          return new this(GENESIS_DATA);
      }
+     static mineBlock({lastBlock, data})
+     {
+         return new this({
+             timestamp:Date.now(),
+             lastHash:lastBlock.hash,
+             data
 
+         });
+
+
+     }
      
 }
  
