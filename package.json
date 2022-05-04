@@ -1,0 +1,23 @@
+{
+  "name": "my-crypto-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --watchAll"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshit-katyal/My-Crypto-App.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/harshit-katyal/My-Crypto-App/issues"
+  },
+  "homepage": "https://github.com/harshit-katyal/My-Crypto-App#readme",
+  "devDependencies": {
+    "jest": "^23.6.0"
+  }
+}
