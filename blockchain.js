@@ -1,4 +1,3 @@
-
 const Block = require('./block');
 const cryptoHash = require('./crypto-hash')
 class Blockchain
@@ -7,7 +6,6 @@ class Blockchain
     {
         this.chain =[Block.genesis()];
     }
-
     addBlock({data})
     {
         const newBlock = Block.mineBlock(
@@ -39,7 +37,20 @@ class Blockchain
 
         return true;
     }
-
+    replaceChain(chain)  //this is not a static method because replacing the chain is based on an individual instance 
+    {
+        if(chain.length<=this.chain.length)
+        {
+            console.error('The incoming chain must be longer')
+            return;
+        }
+        if(!Blockchain.isValidChain(chain))
+        {
+            console.error('The incoming chain must be valid')
+            return 
+        }
+         console.log('Replacing chain')
+         this.chain = chain;
+    }
 }
-
 module.exports = Blockchain
