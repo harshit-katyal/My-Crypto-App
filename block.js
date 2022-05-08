@@ -1,5 +1,6 @@
 const{ GENESIS_DATA , MINE_RATE } = require('./config')
 const cryptoHash = require('./crypto-hash')
+const hexToBinary = require('hex-to-binary')
 class Block
 {
     constructor({timestamp , lastHash, hash,nonce,difficulty,data})
@@ -30,7 +31,7 @@ class Block
               difficulty = Block.adjustDifficulty({originalBlock: lastBlock,timestamp})
               hash = cryptoHash(timestamp,lastHash,data,nonce,difficulty)
          }
-         while(hash.substring(0,difficulty) !=='0'.repeat(difficulty));
+         while(hexToBinary(hash).substring(0,difficulty) !=='0'.repeat(difficulty)); //We'll be doing a difficulty check based on the binary version of the hash....Their is no need to convert every 
 
          return new this({
              timestamp,
