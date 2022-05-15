@@ -18,19 +18,27 @@ class PubSub
 
         this.pubnub.subscribe({channels: Object.values(CHANNELS)})
 
-        this.pubnub.addListener({
-            message : messageObject =>
-            {
-                const{channel, message} = messageObject
-
-            }
-        })
+        this.pubnub.addListener(this.listener())
     }
 
     listener()
     {
         return {
-            
+
+            message : messageObject =>
+            {
+                const{channel, message} = messageObject // this message object will take 2 parameters ---> we want to know which channel has been triggered and what is the actual message 
+                 console.log(`Message recieved. Channel : ${channel}. Message: {Message: ${message}}`)
+            }
+
+
         }
     }
+
+    publish({channel,message})          //to publish the message to all the channels
+    {
+        this.pubnub.publish({channel,message})         
+    }
+
 }
+module.exports = PubSub
