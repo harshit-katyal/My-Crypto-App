@@ -1,69 +1,99 @@
 const PubNub = require('pubnub');
 const credentials ={
-    publishKey: 'pub-c-868c212e-e33a-4670-ba0b-94e695878ef3',
-    subscribeKey: 'sub-c-27f063fd-e1a1-42d9-95f7-13254d2428a1',
-    secretKey: 'sec-c-OTU5OTA2NGYtNDViMi00ZTA3LTljYTAtOGU3YzMyYWZlZTVk'
+    publishKey: 'pub-c-a1426a86-f4ed-49cb-b7b7-c6445676bfcf',
+    subscribeKey: 'sub-c-d5dbf889-a828-4c20-ac5b-1dce4f12693d',
+    secretKey: 'sec-c-NDFiZmMzMjgtZjRkMi00YzA5LTg5NmEtNWE5ZWY1MGM4Njky'
 
 }
+const CHANNELS = {
+  TEST: 'TEST',
+  BLOCKCHAIN: 'BLOCKCHAIN',
+  TRANSACTION: 'TRANSACTION'
+};
 
-const CHANNELS ={
-    TEST : 'TEST',
-    BLOCKCHAIN: 'BLOCKCHAIN' // when one blochain instance adds a new block it's gonna be their duty to braodcast their version of the blockchain over this blockchain channel .
-    // that way other nodes can decide whether or not the new data is valid and decide to update their chain based off that
-    // there the subscriber in the pubsub class needs also subscribe to the channel
-}
+class PubSub {
+  constructor({ blockchain, transactionPool, wallet }) {
+    this.blockchain = blockchain;
+    this.transactionPool = transactionPool;
+    this.wallet = wallet;
 
-class PubSub 
-{
-    constructor({blockchain})
-    {
-        this.blockchain = blockchain   
-        this.pubnub = new PubNub(credentials)
+    this.pubnub = new PubNub(credentials);
 
-        this.pubnub.subscribe({channels: Object.values(CHANNELS)})
+    this.pubnub.subscribe({ channels: Object.values(CHANNELS) });
 
-        this.pubnub.addListener(this.listener())
-    }
-    broadcastChain() {   //this doesnt have any arguments because we can reference the chain of the local blockchain instance 
-        this.publish({
-          channel: CHANNELS.BLOCKCHAIN,
-          message: JSON.stringify(this.blockchain.chain)   // this.blockchain.chain is an array and we can only publish string messages over channels ...therefore we take the whole blockchain.chain and wrap it into a string when we publish it on the blockchain network
-        });
-      }
+    this.pubnub.addListener(this.listener());
+  }
 
-      subscribeToChannels() {
-        this.pubnub.subscribe({
-          channels: [Object.values(CHANNELS)]
-        });
-      }
-    listener()
-    {
-        return {
+  broadcastChain() {
+    this.publish({
+      channel: CHANNELS.BLOCKCHAIN,
+      message: JSON.stringify(this.blockchain.chain)
+    });
+  }
 
-            message : messageObject =>
-            {
-                const{channel, message} = messageObject // this message object will take 2 parameters ---> we want to know which channel has been triggered and what is the actual message 
-                 console.log(`Message recieved. Channel : ${channel}. Message: Message: ${message}`)
+  broadcastTransaction(transaction) {
+    this.publish({
+      channel: CHANNELS.TRANSACTION,
+      message: JSON.stringify(transaction)
+    });
+  }
 
-                 const parsedMessage = JSON.parse(message)
+  subscribeToChannels() {
+    this.pubnub.subscribe({
+      channels: [Object.values(CHANNELS)]
+    });
+  }
 
-                 if(channel === CHANNELS.BLOCKCHAIN)
-                 {
-                 this.blockchain.replaceChain(parsedMessage);
-                 }
+  listener() {
+    return {
+      message: messageObject => {
+        const { channel, message } = messageObject;
 
+        console.log(`Message received. Channel: ${channel}. Message: ${message}`);
+        const parsedMessage = JSON.parse(message);
+
+        switch(channel) {
+          case CHANNELS.BLOCKCHAIN:
+            this.blockchain.replaceChain(parsedMessage, true, () => {
+              this.transactionPool.clearBlockchainTransactions(
+                { chain: parsedMessage.chain }
+              );
+            });
+            break;
+          case CHANNELS.TRANSACTION:
+            if (!this.transactionPool.existingTransaction({
+              inputAddress: this.wallet.publicKey
+            })) {
+              this.transactionPool.setTransaction(parsedMessage);
             }
-
-
+            break;
+          default:
+            return;
         }
+      }
     }
-   
-    publish({channel,message})          //to publish the message to all the channels
-    {
-      
-        this.pubnub.publish({channel,message})         
-    }
+  }
 
+  publish({ channel, message }) {
+    // there is an unsubscribe function in pubnub
+    // but it doesn't have a callback that fires after success
+    // therefore, redundant publishes to the same local subscriber will be accepted as noisy no-ops
+    this.pubnub.publish({ message, channel });
+  }
+
+  broadcastChain() {
+    this.publish({
+      channel: CHANNELS.BLOCKCHAIN,
+      message: JSON.stringify(this.blockchain.chain)
+    });
+  }
+
+  broadcastTransaction(transaction) {
+    this.publish({
+      channel: CHANNELS.TRANSACTION,
+      message: JSON.stringify(transaction)
+    });
+  }
 }
 
-module.exports = PubSub
+module.exports = PubSub;
