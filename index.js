@@ -10,7 +10,7 @@ const TransactionMiner = require('./app/transaction-miner');
 const isDevelopment = process.env.ENV === 'development';
 
 const DEFAULT_PORT = 3000;
-const ROOT_NODE_ADDRESS = isDevelopment?`http://localhost:${DEFAULT_PORT}`:'https://crypto-ap-p.herokuapp.com'
+const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`
 
 const app = express();
 const blockchain = new Blockchain();
