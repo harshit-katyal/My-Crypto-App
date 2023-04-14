@@ -10,11 +10,11 @@ const GENESIS_DATA = {
   data: []
 };
 
-const STARTING_BALANCE = 945;
+const STARTING_BALANCE = 1000;
 
 const REWARD_INPUT = { address: '*authorized-reward*' };
 
-const MINING_REWARD = 0;
+const MINING_REWARD = 50;
 
 module.exports = {
   GENESIS_DATA,
